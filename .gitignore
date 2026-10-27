@@ -1,0 +1,8 @@
+# Runtime source registry: one JSON per workspace, created when a file is added.
+# It records your local paths, so it must never travel with the repository.
+dsh-source-notebook/source-notebook/
+
+# Tooling scratch
+.dsh-ops-update-*.lock
+node_modules/
+*.zip

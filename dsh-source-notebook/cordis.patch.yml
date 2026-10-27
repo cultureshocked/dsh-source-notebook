@@ -1,0 +1,8 @@
+- insert:
+    - id: source-notebook
+      name: '@local/dsh-source-notebook'
+      config:
+        maxSources: 400
+        maxSourceBytes: 25165824
+        maxChunksPerSource: 4000
+        searchResults: 8

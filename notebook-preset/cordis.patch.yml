@@ -1,0 +1,97 @@
+# Agent preset "notebook": a study-companion mode layered on the minimal base.
+#
+# The `@local/dsh-source-notebook` plugin is NOT mounted here. It stays a
+# deployment-level row so its tools, slash commands and grounding prompt
+# section exist in every mode; this preset supplies policy and voice only.
+#
+# Compared with `minimal`, this preset:
+#   * keeps every filesystem capability at its default (read/write/edit on),
+#     because the agent must be able to write study guides and practice exams;
+#   * keeps web access, so live references can be cited alongside notebook
+#     sources;
+#   * adds discovery, present, ask-user, todo and subagent tools;
+#   * sets `complete: false` so the plugin's grounded-citation section and the
+#     standard tool guidance survive alongside the persona.
+- insert:
+    - id: preset-notebook
+      name: '@deepseek-ai/dsh-agent-preset'
+      config:
+        id: notebook
+        name: Notebook
+        description: Studies your own sources in ./notebook and writes guides and exams there.
+        order: 2
+        plugins:
+          - id: persona
+            name: '@deepseek-ai/dsh-persona'
+            config:
+              prefix: |-
+                You are a study companion powered by the {{model}} model.
+                You help the student understand and revise material they have imported into a source notebook.
+
+                ## Where everything goes
+
+                The student's source files stay exactly where they put them. Never move, rewrite, rename, or delete a source file, and never copy one into the notebook folder.
+
+                Generated material goes in the `notebook` folder at the workspace root, created on demand:
+                * `./notebook/` holds documents you produce for the student, such as study guides, practice exams, and summaries.
+                * `./notebook/transcripts/` holds transcript exports.
+                * Name each generated file after its subject, never with a generic name, so two runs cannot overwrite each other.
+
+                The rule that keeps provenance obvious: anything inside `./notebook/` is yours, and anything outside it belongs to the student. Do not break that invariant, and when you refer to a file, say which side it is on.
+
+                ## Answering
+
+                When the student asks about their own course material, search the notebook first and answer from those passages. Cite the file and locator for every claim.
+
+                You may also use the web. Cite any outside source as an outside source, so the student can always tell their own material from supplementary reading. Never present outside information as if it came from the notebook.
+
+                If the notebook does not cover something, say so plainly rather than filling the gap from memory.
+              complete: false
+              includeRuntimeContext: true
+          - id: agent-instructions
+            name: '@deepseek-ai/dsh-agent-instructions'
+            config:
+              maxBytes: 65536
+          - id: time-context
+            name: '@deepseek-ai/dsh-time-context'
+          - id: tool-bash
+            name: '@deepseek-ai/dsh-tool-bash'
+            disabled: !!js process.platform === 'win32'
+          - id: tool-pwsh
+            name: '@deepseek-ai/dsh-tool-pwsh'
+            disabled: !!js process.platform !== 'win32'
+          - id: tool-fs
+            name: '@deepseek-ai/dsh-tool-fs'
+          - id: tool-fs-search
+            name: '@deepseek-ai/dsh-tool-fs-search'
+            config:
+              sampleOverCapGlobResults: false
+          - id: tool-web
+            name: '@deepseek-ai/dsh-tool-web'
+          - id: tool-ask-user
+            name: '@deepseek-ai/dsh-tool-ask-user'
+          - id: tool-todo
+            name: '@deepseek-ai/dsh-tool-todo'
+            config:
+              allowParallelInProgress: true
+          - id: present
+            name: '@deepseek-ai/dsh-tool-present'
+          - id: skill-filesystem
+            name: '@deepseek-ai/dsh-skill-filesystem'
+          - id: tool-skill
+            name: '@deepseek-ai/dsh-tool-skill'
+          - id: tool-subagent
+            name: '@deepseek-ai/dsh-tool-subagent'
+            config:
+              provider: spawn
+              toolName: subagent
+          - id: compaction
+            name: cordis:group
+            group: true
+            isolate:
+              compaction: true
+            config:
+              - id: compaction-basic
+                name: '@deepseek-ai/dsh-compaction-basic'
+              - id: command-compact
+                name: '@deepseek-ai/dsh-command-compact'
